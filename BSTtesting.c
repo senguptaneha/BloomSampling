@@ -171,10 +171,6 @@ int main(int argc, char *argv[]){
 			sample = dictionarySample(k,nVertices);
 			clock_gettime(CLOCK_MONOTONIC,&finish);
 			elapsed_da += 1000*((finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec)/pow(10,9));
-			if (j % 10 == 0){
-				printf("j = %d, ", j); 
-				fflush(stdout);
-			}
 
 		}
 /*		clock_gettime(CLOCK_MONOTONIC,&start);
@@ -190,7 +186,7 @@ int main(int argc, char *argv[]){
 		int z = belongsInArr1(sample,realArr,setSize);
 		if (z>=1) nHit++;*/
 		i++;
-		printf("i = %d\n",i);fflush(stdout);
+		printf("Completed sampling from %d sets\n",i);fflush(stdout);
 	}
 	fclose(fi);
 //	printf("%.1f %lf %lf\n", desAcc, elapsed_bst, elapsed_da);
