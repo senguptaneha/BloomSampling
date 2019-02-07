@@ -1,4 +1,6 @@
 # BloomSampling
+##This repo is under construction
+
 ## Introduction 
 Bloom filters are summary data structures that store the elements of a set compactly in a bit array. 
 Given a Bloom fitler B(S) that stores the set S, how can we sample elements from the original set S?
