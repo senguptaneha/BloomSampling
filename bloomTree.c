@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "../bloom.h"
+#include "bloom.h"
 
 extern int K;
 extern int VECT_SIZE;

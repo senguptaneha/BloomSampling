@@ -4,7 +4,8 @@
 #include <string.h>
 #include <math.h>
 #include "bloomTree.c"
-#include "../bloom.h"
+#include "bloom.h"
+#include "malloc_count-0.7/malloc_count.h"
 extern int K;
 extern int VECT_SIZE;
 extern int T;
@@ -136,6 +137,7 @@ int main(int argc, char *argv[]){
 	init(k);
 	int startSize = malloc_count_current();
 	struct bloomTree *a = getBloomTree(0,nVertices);
+	printf("Constructed the BloomSampleTree\n");
 	int endSize = malloc_count_current();
 	//printf("created the Bloom tree %d\n",(endSize - startSize));fflush(stdout);
 	int *realArr = (int*)malloc(sizeof(int)*maxSize);
@@ -169,6 +171,10 @@ int main(int argc, char *argv[]){
 			sample = dictionarySample(k,nVertices);
 			clock_gettime(CLOCK_MONOTONIC,&finish);
 			elapsed_da += 1000*((finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec)/pow(10,9));
+			if (j % 10 == 0){
+				printf("j = %d, ", j); 
+				fflush(stdout);
+			}
 
 		}
 /*		clock_gettime(CLOCK_MONOTONIC,&start);
@@ -184,7 +190,7 @@ int main(int argc, char *argv[]){
 		int z = belongsInArr1(sample,realArr,setSize);
 		if (z>=1) nHit++;*/
 		i++;
-//		printf("i = %d\n",i);fflush(stdout);
+		printf("i = %d\n",i);fflush(stdout);
 	}
 	fclose(fi);
 //	printf("%.1f %lf %lf\n", desAcc, elapsed_bst, elapsed_da);
