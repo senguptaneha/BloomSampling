@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "bloomTree.c"
-#include "../bloom.h"
+#include "bloom.h"
 #include <pthread.h>
 #include <time.h>
 #include <stdlib.h>
@@ -23,7 +23,7 @@ int totalRange = 0;
 pthread_mutex_t m_totalRange;
 pthread_cond_t c_overflow = PTHREAD_COND_INITIALIZER;
 
-int numIntersections = 0;
+int nIntersections = 0;
 pthread_mutex_t m_numIntersections;
 
 int numMembership = 0;
@@ -86,7 +86,7 @@ void addTask(struct bloomNode *t){
 		rear = (rear+1)%QSIZE;
 		pthread_mutex_unlock(&m_taskQueue);
 	}
-//	pthread_mutex_unlock(&m_taskQueue);
+	// pthread_mutex_unlock(&m_taskQueue);
 }
 
 void searchLeaf(struct bloomNode *t){
@@ -99,13 +99,13 @@ void searchLeaf(struct bloomNode *t){
 	for (i=t->start;i<=t->end;i++){
 		localMembership++;
 		if (is_in(i,&query)){
-	//		printf("OVER HERE %d. %d\n",leafID,localCount);
-	//		fflush(stdout);
+			// printf("OVER HERE %d. %d\n",leafID,localCount);
+			// fflush(stdout);
 			output[leafID][localCount] = i;
-	//		printf("DONE WRITING TO %d, %d\n",leafID,localCount);
-	//		fflush(stdout);
+			// printf("DONE WRITING TO %d, %d\n",leafID,localCount);
+			// fflush(stdout);
 			localCount++;
-//			printf("%d,",i);
+			// printf("%d,",i);
 		}
 	}
 	//fflush(foutput);
@@ -161,7 +161,7 @@ void *executeTask(void *x){
 			}
 
 			pthread_mutex_lock(&m_numIntersections);
-			numIntersections++;
+			nIntersections++;
 			pthread_mutex_unlock(&m_numIntersections);
 
 			double estimate = elemsIntersection(&(t->lchild->filter),&query,t->nOnes,k1);
@@ -190,41 +190,126 @@ void *executeTask(void *x){
 	}
 }
 
-int main(int argc, char *argv[]){
-	nVertices = atoi(argv[1]);
-	int nNodes = atoi(argv[2]);
-//	foutput = fopen("bloomRecons","w");
 
+/*****************************config functions ********************************/
+int getRequiredm(int M, int n, int k, double a){
+    double z = (n/a - n)/(M-n);
+    z = 1 - pow(z,1.0/k);
+    z = 1 - pow(z,1.0/(n*k));
+    z = 1.0/z;
+    return (int)(floor(z));
+}
+
+int bestLevel(int m, int n, int M){
+    seiveInitial();
+
+	struct bloom *k = (struct bloom *)malloc(sizeof(struct bloom));
+	k->bloom_vector = (int*)malloc(sizeof(int)*(m/NUM_BITS + 1));
+    init(k);
+	struct bloom *l = (struct bloom *)malloc(sizeof(struct bloom));
+	l->bloom_vector = (int*)malloc(sizeof(int)*(m/NUM_BITS + 1));
+    init(l);
+
+	int val = rand()%M;
+
+	int i;
+	for (i=0;i<n;i++){
+			int v = rand()%M;
+			insert(v,k);
+			v = rand()%M;
+			insert(v,l);
+	}
+
+	double m_cost = 0, i_cost=0;
+	struct timespec start,finish;
+
+	clock_gettime(CLOCK_MONOTONIC,&start);
+	for (i=0;i<M;i++){
+			is_in(i,k);
+	}
+	clock_gettime(CLOCK_MONOTONIC,&finish);
+	m_cost += finish.tv_sec - start.tv_sec;
+	m_cost += (finish.tv_nsec - start.tv_nsec)/pow(10,9);
+	// m_cost /= 100000;
+
+	int nk = num_ones(k), nl = num_ones(l);
+	clock_gettime(CLOCK_MONOTONIC,&start);
+	elemsIntersection(k,l,nk,nl);
+	clock_gettime(CLOCK_MONOTONIC,&finish);
+	i_cost += finish.tv_sec - start.tv_sec;
+	i_cost += (finish.tv_nsec - start.tv_nsec)/pow(10,9);
+
+	int totalLevels = 1;
+	int nElems = M/2;
+	while (nElems>0){
+			totalLevels +=1;
+			nElems /= 2;
+	}
+	// printf("M = %d, VECT_SIZE = %d, m_cost = %lf,i_cost = %lf, totalLevels = %d\n",M,VECT_SIZE,m_cost,i_cost,totalLevels);
+
+	nElems = M;
+	int d = 1;
+	while (nElems > 0){
+			nElems = M/pow(2,d);
+			double m1 = nElems/log(nElems);
+			double m2 = (M*i_cost/m_cost);
+			if (m1 < m2) break;
+			d = d+1;
+	}
+    return d;
+}
+/********************************************************************************************************************/
+
+int main(int argc, char *argv[]){
+	if (argc<7){
+		printf("Usage: ./BSTtesting M nSets inputFile k T desAcc\n");
+		return 0;
+	}
+	
+	double elapsed_bst = 0.0, elapsed_da = 0.0;
+	srand(time(NULL));
+	setSeeds(); //required for MD5 or murmur hash functions
+	int nVertices = atoi(argv[1]);
+	int nSets = atoi(argv[2]);
 	K = atoi(argv[4]);
-	VECT_SIZE = atoi(argv[5]);
+	overlapThreshold = atoi(argv[5]);
+	double desPrec = atof(argv[6]);
+
+	int setSize = 10000;
+
+	VECT_SIZE = getRequiredm(nVertices, setSize, K, desPrec);
+	levelThreshold = bestLevel(VECT_SIZE, setSize, nVertices);
+
 	seiveInitial();
-	overlapThreshold = atof(argv[6]);
-	//overlapThreshold = nNodes/500.0;
-	levelThreshold = atoi(argv[7]);
+
 	struct bloomTree *a = getBloomTree(0,nVertices);
 	query.bloom_vector = (int*)malloc(sizeof(int)*(VECT_SIZE/NUM_BITS + 1));
 	init(&query);
 
-	int *realArr = (int*)malloc(sizeof(int)*nNodes);
+	int *realArr = (int*)malloc(sizeof(int)*setSize);
 	int j;
-	for (j=0;j<nNodes;j++) realArr[j] = 0;
+	for (j=0;j<setSize;j++) realArr[j] = 0;
 
 	FILE *fi = fopen(argv[3],"r");
 	int i = 0;
-	while (i<nNodes){
+	while (i<setSize){
 		int val=0;
 		fscanf(fi,"%d\n",&val);
+		printf("inserting %d\n", val);
 		insert(val,&query);
 		realArr[i] = val;
 		i++;
 	}
 	fclose(fi);
 	int rc;
-	//traverseTree(realArr,nNodes,a->left);
-	//traverseTree(realArr,nNodes,a->right);
-	//printf("\n");
-	(a->left)->prevEstimate = 1.0*nNodes;
-	(a->right)->prevEstimate = 1.0*nNodes;
+
+	int actualElems = 0;
+	for (j = 0; j < nVertices; j++)
+		if(is_in(j, &query)) actualElems += 1;
+	printf("acutal elems = %d\n", actualElems);
+	
+	(a->left)->prevEstimate = 1.0*setSize;
+	(a->right)->prevEstimate = 1.0*setSize;
 	/*Initialize all mutexes and condition variables*/
 	pthread_mutex_init(&m_numElements, NULL);
 	pthread_mutex_init(&m_taskQueue, NULL);
@@ -262,7 +347,7 @@ int main(int argc, char *argv[]){
 	clock_gettime(CLOCK_MONOTONIC,&finish);
 //	fclose(foutput);
 	elapsed = (finish.tv_sec - start.tv_sec);
-	elapsed += (finish.tv_nsec - start.tv_nsec)/1000000000.0;
-	printf("(M=%d,n=%d,m=%d,o=%lf): RECONSTRUCTED SET OF SIZE %d  WITH PRECISION %lf IN TIME %lf sec, INTERSECTIONS=%d,MEMBERSHIP=%d\n",nVertices,nNodes,VECT_SIZE,overlapThreshold,numElements,(1.0*nNodes)/numElements,elapsed,numIntersections,numMembership-1);
+	elapsed += (finish.tv_nsec - start.tv_nsec)/pow(10,9);
+	printf("(M=%d,n=%d,m=%d,o=%lf): RECONSTRUCTED SET OF SIZE %d  WITH PRECISION %lf IN TIME %lf sec, INTERSECTIONS=%d,MEMBERSHIP=%d\n",nVertices,setSize,VECT_SIZE,overlapThreshold,numElements,(1.0*setSize)/numElements,elapsed,nIntersections,numMembership-1);
 	pthread_exit(NULL);
 }
