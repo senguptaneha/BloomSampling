@@ -1,9 +1,9 @@
 # BloomSampling
-##This repo is under construction
+### This repository is under construction
 
 ## Introduction 
 Bloom filters are summary data structures that store the elements of a set compactly in a bit array. 
-Given a Bloom fitler B(S) that stores the set S, how can we sample elements from the original set S?
+Given a Bloom fitler BF(S) that stores the set S, how can we sample elements from the original set S?
 A related question is how to reconstruct the set S from the Bloom filter?
 
 This repository implements algorithms to achieve both of the above tasks [1].
@@ -12,10 +12,15 @@ This repository implements algorithms to achieve both of the above tasks [1].
 
 To compile the code, download the malloc_count library from here: https://panthema.net/2013/malloc_count/
 and place inside the repo directory.
-Compile using 
+For sampling, compile using 
 ```
-make
+make BSTSample
 ```
+For reconstruction, compile using
+```
+make BSTReconstruct
+```
+
 ## Sampling
 
 To run the sampling tests, use
@@ -33,6 +38,23 @@ To run the sampling tests, use
 ### Output
 The code reports the average time taken to sample using the BloomSampleTree based algorithm ([1]), and the dictionary attack which is the baseline. The sampling time reported is averaged over 100 sampling rounds over all query sets. In addition, it outputs the measured memory footprint of the method.
 
+## Reconstruction
+
+To run the sampling tests, use
+```
+./BSTReconstruct namespaceSize inputFile numHashFunctions threshold desiredPrecision
+```
+Unlike `BSTSample`, the provided `BSTReconstruct` utility can be used to reconstruct only a given set at a time. However, it can also be easily extended to reconstruct multiple sets at once.
+
+### Parameters
+* `namespaceSize` is the size of the universe that S is drawn from. If namespace size is `M`, the universe is assumed to be `[0 ... M-1]`.
+* `inputFile` contains elements of the set, one element per line.
+* `numHashFunctions` is the number of hash functions that a Bloom filter uses.
+* `threshold` is the intersection size threshold used by the algorithm. This is an important parameter for the reconstruction algorithm. A higher threshold will result in higher precision, smaller reconstruction time, but smaller recall. A small threshold will give lower precision, larger reconstruction time, and higher recall. Best values for this threshold for typical parameter settings can be found in the file `bestOverlapThresholds`.
+* `desiredPrecision` is the desired precision of reconstructed set.
+
+### Output
+The code reports the size of the reconstructed set, the precision, reconstruction time in seconds, and the number of intersection and membership operations.
 
 ## Datasets
 Simulated datasets available at:  https://drive.google.com/file/d/1tOiwwnvl5uoFD0Zaaq-t8DlSJnycU8aE/view?usp=sharing

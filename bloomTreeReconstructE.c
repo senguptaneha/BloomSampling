@@ -261,8 +261,8 @@ int bestLevel(int m, int n, int M){
 /********************************************************************************************************************/
 
 int main(int argc, char *argv[]){
-	if (argc<7){
-		printf("Usage: ./BSTtesting M nSets inputFile k T desAcc\n");
+	if (argc<6){
+		printf("Usage: ./BSTReconstruct M inputFile k T desAcc\n");
 		return 0;
 	}
 	
@@ -270,10 +270,10 @@ int main(int argc, char *argv[]){
 	srand(time(NULL));
 	setSeeds(); //required for MD5 or murmur hash functions
 	int nVertices = atoi(argv[1]);
-	int nSets = atoi(argv[2]);
-	K = atoi(argv[4]);
-	overlapThreshold = atoi(argv[5]);
-	double desPrec = atof(argv[6]);
+	
+	K = atoi(argv[3]);
+	overlapThreshold = atoi(argv[4]);
+	double desPrec = atof(argv[5]);
 
 	int setSize = 10000;
 
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]){
 	int j;
 	for (j=0;j<setSize;j++) realArr[j] = 0;
 
-	FILE *fi = fopen(argv[3],"r");
+	FILE *fi = fopen(argv[2],"r");
 	int i = 0;
 	while (i<setSize){
 		int val=0;
