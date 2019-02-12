@@ -1,5 +1,4 @@
 # BloomSampling
-### This repository is under construction
 
 ## Introduction 
 Bloom filters are summary data structures that store the elements of a set compactly in a bit array. 
