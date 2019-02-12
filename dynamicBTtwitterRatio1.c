@@ -3,7 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <math.h>
-#include "../bloom.h"
+#include "bloom.h"
 #include "bloomTreeDynamic.c"
 
 long daSample(long M, struct bloom *b){
@@ -72,22 +72,22 @@ void resetSet(struct inputSet *iS){
 
 int main(int argc, char* argv[]){
 	if (argc<8){
-                printf("Usage: ./dynamicBTtwitterTest M nSets inputFile k m T l\n");
-                return 0;
-        }
-        struct timespec start,finish,mid;
-        double elapsed=0.0;
-        srand(time(NULL));
-        setSeeds();	//these seeds are for murmur hash functions
-        long nVertices = atol(argv[1]);
-        int nSets = atoi(argv[2]); //number of hashTags
-        K = atoi(argv[4]);
-        VECT_SIZE = atoi(argv[5]);
-        T = atoi(argv[6]);
-        levelThreshold = atoi(argv[7]);
+		printf("Usage: ./dynamicBTtwitterTest M nSets inputFile k m T l\n");
+		return 0;
+	}
+	struct timespec start,finish,mid;
+	double elapsed=0.0;
+	srand(time(NULL));
+	setSeeds();	//these seeds are for murmur hash functions
+	long nVertices = atol(argv[1]);
+	int nSets = atoi(argv[2]); //number of hashTags
+	K = atoi(argv[4]);
+	VECT_SIZE = atoi(argv[5]);
+	T = atoi(argv[6]);
+	levelThreshold = atoi(argv[7]);
 
-        seiveInitial();
-        struct bloomTree *a = getBloomTree(0,nVertices);
+	seiveInitial();
+	struct bloomTree *a = getBloomTree(0,nVertices);
 	struct bloom ** bfList = (struct bloom**)malloc(nSets *sizeof(struct bloom*));
 	int i;
 

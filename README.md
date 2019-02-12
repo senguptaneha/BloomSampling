@@ -12,10 +12,17 @@ This repository implements algorithms to achieve both of the above tasks [1].
 
 To compile the code, download the malloc_count library from here: https://panthema.net/2013/malloc_count/
 and place inside the repo directory.
+
 For sampling, compile using 
 ```
 make BSTSample
 ```
+
+For sampling with sparse namespaces, compile using
+```
+make dynamicBTtwitterRatio
+```
+
 For reconstruction, compile using
 ```
 make BSTReconstruct
@@ -38,6 +45,16 @@ To run the sampling tests, use
 ### Output
 The code reports the average time taken to sample using the BloomSampleTree based algorithm ([1]), and the dictionary attack which is the baseline. The sampling time reported is averaged over 100 sampling rounds over all query sets. In addition, it outputs the measured memory footprint of the method.
 
+### Sampling with a sparsely occupied namespaces
+In many real world applications, the namespace of elements from which the set S is drawn may be sparsely occupied. This means, that a majority of elements in `[0 ... M-1]` are not a part of any set. An example of this use-case is that of Twitter data, where a set corresponds to a hash tag and contains the user ids that tweeted with that hash tag. Since user ids are large alpha-numeric strings, the namespace of user ids is sparsely occupied.
+
+In the scenario where the namespace is known to be sparsely occupied, the sampling process can be made faster and with smaller memory footprint. For such cases, use,
+```
+./dynamicBTtwiiterRatio namespaceSize nSets inputFile numHashFunctions BloomFilterSize threshold numLevels
+```
+
+The parameters are similar to that of sampling above. Additionally, `BloomFilterSize` should provide the size of the Bloom filters used in bits. For larger values of `namespaceSize` or larger sets to be sampled from, this size should be higher. `numLevels` gives the number of levels in `BloomSampleTree` [1].
+
 ## Reconstruction
 
 To run the sampling tests, use
@@ -58,7 +75,7 @@ The code reports the size of the reconstructed set, the precision, reconstructio
 
 ## Datasets
 Simulated datasets available at:  https://drive.google.com/file/d/1tOiwwnvl5uoFD0Zaaq-t8DlSJnycU8aE/view?usp=sharing
-Twitter data available at https://drive.google.com/file/d/1YKng-ueZkj0jbWiNkjpWVwn72cGhDk9w/view?usp=sharing
+Twitter data available at https://drive.google.com/open?id=1yIra0I7qQqNyvNdVshw9EugYM0WB0APW
 
 ## References
 [1] Neha  Sengupta,  Amitabha  Bagchi,  Srikanta  Bedathur,  and  Maya  Ramanath. Sampling  and  Reconstruction  Using  Bloom  Filters. IEEE Transactions on Knowledge and Data Engineering, 2017.
